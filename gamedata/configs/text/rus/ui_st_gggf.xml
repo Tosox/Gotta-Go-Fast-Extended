@@ -1,0 +1,64 @@
+<!-- 
+	Anomaly Modconfiguration Menu strings
+	
+-->
+
+<string_table>
+
+	<string id="ui_mcm_gggf_title">
+		<text>Actor Speed Config</text>
+	</string>
+	<string id="ui_mcm_menu_gggf">
+		<text>Grok Gotta Go Fast</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_run">
+		<text>Run speed multiplier</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_run_desc">
+		<text>Multiplies actor running speed (when you move without any other key pressed) by the defined factor.</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_sprint">
+		<text>Sprint speed multiplier</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_sprint_desc">
+		<text>Multiplies actor sprinting speed (when you move with the "Sprint" key pressed) by the defined factor.</text>
+	</string>
+	
+	<string id="ui_mcm_gggf_gotta_go_fast_walk">
+		<text>Walk speed multiplier</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_walk_desc">
+		<text>Multiplies actor walking speed (when you move with the "Walk" key pressed) by the defined factor.</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_crouch">
+		<text>Crouch speed multiplier</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_crouch_desc">
+		<text>Multiplies actor crouching speed (when you move with the "Crouch" key pressed) by the defined factor.</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_prone">
+		<text>Prone speed multiplier</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_prone_desc">
+		<text>Multiplies actor proning speed (when you move with the "Walk + Crouch" key pressed) by the defined factor.</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_climb">
+		<text>Climb speed multiplier</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_climb_desc">
+		<text>Multiplies actor climbing speed (when you climb a ladder) by the defined factor.</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_lean">
+		<text>Walking while leaning speed multiplier</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_lean_desc">
+		<text>Multiplies actor walking speed while leaning (when you move with the "Walk + Lean left/right" key pressed) by the defined factor.</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_scoped">
+		<text>Walking while aiming speed multiplier</text>
+	</string>
+	<string id="ui_mcm_gggf_gotta_go_fast_scoped_desc">
+		<text>Multiplies actor walking speed while aiming (when you move with the "Aim" key pressed) by the defined factor.</text>
+	</string>
+
+</string_table>
