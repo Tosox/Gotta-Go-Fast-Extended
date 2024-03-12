@@ -1,24 +1,20 @@
-# Activated Charcoal
-
-> Note: If you have any suggestions write me a [DM](https://www.moddb.com/messages/compose?to=Tosox) on Moddb or Discord [Tosox#0573]
-
-## Description
-
-- This mod brings the [Dead Air](https://www.moddb.com/mods/dead-air) drug "Activated Charcoal" to Anomaly.
-- You can find the drug on corpses, buy it from medics, or make it yourself.
-- It's mainly used to remove the dizziness effect e.g. after taking Yadulin or drinking vodka.
-
-## Installation
-
-* Make sure that [FDDA](https://www.moddb.com/mods/stalker-anomaly/addons/food-drug-and-drinks-animations-reuploaded) and the [Modded Exes](https://github.com/themrdemonized/STALKER-Anomaly-modded-exes) are installed
-* Download the [latest release](https://www.moddb.com/mods/stalker-anomaly/addons/dltx-activated-charcoal)
-* Install the mod preferably with [Mod Organizer](https://github.com/ModOrganizer2/modorganizer/releases/)
-* Open the game and enjoy
-
-## Preview
-
-<img src="readme-res/desc.jpg" alt="desc" width="519" height="304"/>
-
-<img src="readme-res/trade.jpg" alt="trade" width="526" height="541"/>
-
-<img src="readme-res/mcm.jpg" alt="mcm" width="530" height="239" />
+<center>
+<h2><strong>Gotta Go Fast Extended<br /></strong></h2>
+</center>
+<p><strong><em>Note: If you have any suggestions write me a <a href="https://www.moddb.com/messages/compose?to=Tosox">DM</a> on ModDB or Discord [@tosox]<br /></em></strong></p>
+<center>
+<h3>Description</h3>
+</center>
+<p><a href="https://www.moddb.com/mods/stalker-anomaly/addons/gotta-go-also-slow">Gotta Go Also Slow</a> is already included!<br />This add-on adds customizable player walk, crouch, prone, climb, lean and ads speed to the <a href="https://www.moddb.com/mods/stalker-anomaly/addons/100-grok-gotta-go-fast">Grok's Gotta Go Fast</a> MCM menu.</p>
+<center>
+<h3>Installation</h3>
+</center>
+<ul>
+<li>Make sure that <a href="https://www.moddb.com/mods/stalker-anomaly/addons/100-grok-gotta-go-fast">Grok's Gotta Go Fast</a> and the <a href="https://github.com/themrdemonized/STALKER-Anomaly-modded-exes">Modded Exes</a> are installed</li>
+<li>Install the mod preferably with <a href="https://github.com/ModOrganizer2/modorganizer/releases/">Mod Organizer</a></li>
+<li>Open the game and enjoy</li>
+</ul>
+<center>
+<h3>Preview</h3>
+<p><img src="https://media.moddb.com/images/members/5/4555/4554300/profileggfe/preview1232113123123.jpg" alt="preview" /></p>
+</center>
