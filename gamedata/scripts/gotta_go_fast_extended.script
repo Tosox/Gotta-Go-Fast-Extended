@@ -1,12 +1,11 @@
 --[[
-	=====================================================================
-	Addon      : Gotta Go Fast Extended
-	Link       : https://www.moddb.com/mods/stalker-anomaly/addons/gotta-go-fast-extended
-	Author     : TosoxDev
-	Credits    : Grokitach, reter
-	Date       : 13.10.2023
-	Last Edit  : 19.01.2024
-	=====================================================================
+    =====================================================================
+    Addon        : [MODDED EXES] Gotta Go Fast Extended
+    Link:        : https://www.moddb.com/mods/stalker-anomaly/addons/gotta-go-fast-extended
+    Author       : TosoxDev
+    Credits      : Grokitach, reter
+    Last Edit    : 12.03.2024
+    =====================================================================
 --]]
 
 
@@ -50,6 +49,10 @@ end
 
 
 function actor_on_first_update()
+	if not db.actor.get_actor_walk_accel then
+		printf("[Gotta Sneak Fast] You need to install or update the Modded Exes")
+	end
+
 	on_option_change()
 	orig_walk_accel = db.actor:get_actor_walk_accel()
 end
@@ -66,6 +69,8 @@ end
 function actor_on_update()
 	local moving_state = level.actor_moving_state()
 	local is_scoped = is_actor_scoped()
+
+	-- printf(moving_state)
 	
 	-- Check if movement state or scoped state changed
 	if (prev_moving_state == moving_state) and (prev_scoped_state == is_scoped) then
