@@ -79,7 +79,7 @@ local function update_speeds()
     local climb_coef = get_multiplier_product(speeds.climb.multiplier)
 
     db.actor:set_actor_run_coef(clamp(speeds.run.def * run_coef, 1, 10))
-    -- db.actor:set_actor_runback_coef(clamp(speeds.run.def * run_coef, 1, 10))
+    db.actor:set_actor_runback_coef(clamp(speeds.run.def * run_coef, 1, 10))
     db.actor:set_actor_sprint_koef(clamp(speeds.sprint.def * sprint_coef, 1, 10))
     db.actor:set_actor_crouch_coef(clamp(speeds.crouch.def * crouch_coef, 1, 10))
     db.actor:set_actor_climb_coef(clamp(speeds.climb.def * climb_coef, 1, 10))
