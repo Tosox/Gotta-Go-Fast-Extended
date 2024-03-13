@@ -1,83 +1,176 @@
-local speeds = {}
-local sprint_modifiers = {}
-local run_modifiers = {}
-local initialized_base_speed_coefs = false
+local original_walk_accel = nil
+local speeds = {
+    walk = {
+        def = 1,
+        multiplier = {},
+    },
+    run = {
+        def = 1,
+        multiplier = {},
+    },
+    sprint = {
+        def = 1,
+        multiplier = {},
+    },
+    crouch = {
+        def = 1,
+        multiplier = {},
+    },
+    prone = {
+        def = 1,
+        multiplier = {},
+    },
+    climb = {
+        def = 1,
+        multiplier = {},
+    },
+    lean = {
+        def = 1,
+        multiplier = {},
+    },
+    scoped = {
+        def = 1,
+        multiplier = {},
+    },
+}
+
+move_types = {
+    WALK = "walk",
+    RUN = "run",
+    SPRINT = "sprint",
+    CROUCH = "crouch",
+    PRONE = "prone",
+    CLIMB = "climb",
+    LEAN = "lean",
+    SCOPED = "scoped",
+}
 
 local _dbg = false
-local dbg_printf = function(msg, ...)
-	if _dbg then printf("[speed] " .. msg, ...) end
+local dbg_printf = function(...)
+	if _dbg then printf(...) end
 end
 
 local function initialize_base_speed_coefs() 
-	initialized_base_speed_coefs = true
-    speeds[0] = db.actor:get_actor_run_coef()
-    speeds[1] = db.actor:get_actor_runback_coef()
-    speeds[2] = db.actor:get_actor_sprint_koef()
-end
-
-local function update_speeds()
-    if not initialized_base_speed_coefs then
-        initialize_base_speed_coefs()
-    end
-	
-    local run_coef = 1
-    for k, v in pairs(run_modifiers) do
-        dbg_printf("run %s %s", k, v)
-        run_coef = run_coef * v
-    end
-	
-    local sprint_coef = 1
-    for k, v in pairs(sprint_modifiers) do
-		dbg_printf("sprint %s %s", k, v)
-        sprint_coef = sprint_coef * v
-    end
-	
-    dbg_printf("base speed: %s", speeds[0])
-    db.actor:set_actor_run_coef(clamp(speeds[0] * run_coef, 1, 10))
-    db.actor:set_actor_runback_coef(clamp(speeds[1] * run_coef, 1, 10))
-    db.actor:set_actor_sprint_koef(clamp(speeds[2] * sprint_coef, 1, 10))
+    original_walk_accel = db.actor:get_actor_walk_accel()
 end
 
 -- Usage: Add a speed modifier.
 -- Once a speed modifier is added, speed will be recalculated and set.
--- run_modifiers affects run and runback, sprint_modifiers affects sprint
 -- Params:
 -- speed_key - Name of speed multiplier you want to add
 -- speed_mult - Speed multiplier as a number (e.g. 0.5 will halve speed)
--- is_sprint - Boolean, if true adds to sprint modifier and updates accordingly, false adds to run modifier
+-- move_type - String, use move_types array to define which move type speed to adjust
 -- force - Boolean, will overwrite existing speed.
--- Returns true if speed added successfully, false if key already exists (and nothing happens as result)
-function add_speed(speed_key, speed_mult, is_sprint, force)
-    if (is_sprint) then
-        if force or not sprint_modifiers[speed_key] then
-            --printf("sprint: " .. speed_key .. " " .. speed_mult)
-            sprint_modifiers[speed_key] = speed_mult
-            update_speeds()
-            return true
+-- Returns true if speed added successfully, otherwise false
+function add_speed(speed_key, speed_mult, move_type, force)
+    if type(move_type) == "boolean" then
+        -- Backwards compatability
+        if move_type then
+            move_type = move_types.SPRINT
         else
-            return false
-        end
-    else
-        if force or not run_modifiers[speed_key] then
-            --printf("run: " .. speed_key .. " " .. speed_mult)
-            run_modifiers[speed_key] = speed_mult
-            update_speeds()
-            return true
-        else
-            return false
+            move_type = move_types.RUN
         end
     end
+
+    if (not speeds[move_type]) or (not speeds[move_type].multiplier) then
+        return false
+    end
+
+    if (speeds[move_type].multiplier[speed_key]) and (not force) then
+        return false
+    end
+
+    speed[move_type].multiplier[speed_key] = speed_mult
+    return true
 end
 
 -- Usage: Drop a speed modifier. Once a speed modifier is dropped, speed will be recalculated and set. 
 -- Params
--- speed_key - Name of speed multiplier to drop. Will drop from both tables.
+-- speed_key - Name of speed multiplier to drop. Will drop from all tables.
 function remove_speed(speed_key)
-    if sprint_modifiers[speed_key] then
-        sprint_modifiers[speed_key] = nil
+    for typ, speed in pairs(speeds) do
+        if (speed.multiplier) and (speed.multiplier[speed_key]) then
+            dbg_printf("[speed] Removed speed multiplier '%s' for type '%s' with value '%s'", speed_key, typ, speed.multiplier[speed_key])
+            speed.multiplier[speed_key] = nil
+        end
     end
-    if run_modifiers[speed_key] then
-        run_modifiers[speed_key] = nil
+end
+
+function is_actor_walking(state)
+	return (state >= 33) and (state <= 42)
+end
+
+function is_actor_running(state)
+    return (state >= 1) and (state <= 1)
+end
+
+function is_actor_sprinting(state)
+    return (state >= 1) and (state <= 1)
+end
+
+function is_actor_crouching(state)
+	return (state >= 17) and (state <= 26)
+end
+
+function is_actor_proning(state)
+	return (state >= 49) and (state <= 58)
+end
+
+function is_actor_climbing(state)
+	return (state >= 2049) and (state <= 2058)
+end
+
+function is_actor_leaning(state)
+    -- Leaning right or leaning left
+	return ((state >= 16385) and (state <= 16394)) or ((state >= 8193) and (state <= 8202))
+end
+
+function is_actor_scoped()
+	return axr_main.weapon_is_zoomed
+end
+
+local prev_moving_state = nil
+local prev_scoped_state = nil
+local function actor_on_update()
+    if not original_walk_accel then
+        initialize_base_speed_coefs()
+        dbg_printf("[speed] Initialized base speed coefficients")
     end
-    update_speeds()
+
+    local moving_state = level.actor_moving_state()
+	local is_scoped = is_actor_scoped()
+	
+	-- Check if movement state or scoped state changed
+	if (prev_moving_state == moving_state) and (prev_scoped_state == is_scoped) then
+		return
+	end
+
+	prev_moving_state = moving_state
+	prev_scoped_state = is_scoped
+
+    local walk_accel_factor = 1
+	
+	-- Change speed base factor
+	if is_actor_walking(moving_state) then
+		walk_accel_factor = mcm_walk_coef
+	elseif is_actor_crouching(moving_state) then
+		walk_accel_factor = mcm_crouch_coef
+	elseif is_actor_proning(moving_state) then
+		walk_accel_factor = mcm_prone_coef
+	elseif is_actor_climbing(moving_state) then
+		walk_accel_factor = mcm_climb_coef
+	elseif is_actor_leaning(moving_state) then
+		walk_accel_factor = mcm_lean_coef
+	end
+
+	-- TODO: maybe change this logic. Is inconsistent in difference to walking, crouching and proning
+	if is_actor_scoped() then
+		walk_accel_factor = walk_accel_factor * mcm_scoped_coef
+	end
+	
+	db.actor:set_actor_walk_accel(orig_walk_accel * walk_accel_factor)
+end
+
+function on_game_start()
+    RegisterScriptCallback("actor_on_update", actor_on_update)
 end

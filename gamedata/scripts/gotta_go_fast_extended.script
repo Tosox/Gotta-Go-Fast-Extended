@@ -5,101 +5,22 @@
 	Author     : TosoxDev
 	Credits    : Grokitach, reter
 	Date       : 13.10.2023
-	Last Edit  : 19.01.2024
+	Last Edit  : 13.03.2024
 	=====================================================================
 --]]
 
-
-local mcm_walk_coef = nil
-local mcm_crouch_coef = nil
-local mcm_prone_coef = nil
-local mcm_climb_coef = nil
-local mcm_lean_coef = nil
-local mcm_scoped_coef = nil
-
-local prev_moving_state = nil
-local prev_scoped_state = nil
-
-local orig_walk_accel = nil
-local walk_accel_factor = nil
-
-
-function is_actor_walking(state)
-	return (state >= 33) and (state <= 42)
-end
-
-function is_actor_crouching(state)
-	return (state >= 17) and (state <= 26)
-end
-
-function is_actor_proning(state)
-	return (state >= 49) and (state <= 58)
-end
-
-function is_actor_climbing(state)
-	return (state >= 2049) and (state <= 2058)
-end
-
-function is_actor_leaning(state)
-	return ((state >= 16385) and (state <= 16394)) or ((state >= 8193) and (state <= 8202)) -- Leaning right or leaning left
-end
-
-function is_actor_scoped()
-	return axr_main.weapon_is_zoomed
-end
-
-
-function actor_on_first_update()
-	on_option_change()
-	orig_walk_accel = db.actor:get_actor_walk_accel()
-end
+local get_mcm_config = grok_gotta_go_fast_mcm.get_config
 
 function on_option_change()
-	mcm_walk_coef = grok_gotta_go_fast_mcm.get_config("gotta_go_fast_walk")
-	mcm_crouch_coef = grok_gotta_go_fast_mcm.get_config("gotta_go_fast_crouch")
-	mcm_prone_coef = grok_gotta_go_fast_mcm.get_config("gotta_go_fast_prone")
-	mcm_climb_coef = grok_gotta_go_fast_mcm.get_config("gotta_go_fast_climb")
-	mcm_lean_coef = grok_gotta_go_fast_mcm.get_config("gotta_go_fast_lean")
-	mcm_scoped_coef = grok_gotta_go_fast_mcm.get_config("gotta_go_fast_scoped")
-end
-
-function actor_on_update()
-	local moving_state = level.actor_moving_state()
-	local is_scoped = is_actor_scoped()
-	
-	-- Check if movement state or scoped state changed
-	if (prev_moving_state == moving_state) and (prev_scoped_state == is_scoped) then
-		return
-	end
-
-	prev_moving_state = moving_state
-	prev_scoped_state = is_scoped
-	
-	-- Change speed base factor
-	if is_actor_walking(moving_state) then
-		walk_accel_factor = mcm_walk_coef
-	elseif is_actor_crouching(moving_state) then
-		walk_accel_factor = mcm_crouch_coef
-	elseif is_actor_proning(moving_state) then
-		walk_accel_factor = mcm_prone_coef
-	elseif is_actor_climbing(moving_state) then
-		walk_accel_factor = mcm_climb_coef
-	elseif is_actor_leaning(moving_state) then
-		walk_accel_factor = mcm_lean_coef
-	else
-		walk_accel_factor = 1
-	end
-
-	-- TODO: maybe change this logic. Is inconsistent in difference to walking, crouching and proning
-	if is_actor_scoped() then
-		walk_accel_factor = walk_accel_factor * mcm_scoped_coef
-	end
-	
-	db.actor:set_actor_walk_accel(orig_walk_accel * walk_accel_factor)
+	speed.add_speed("gotta_go_fast_extended", get_mcm_config("gotta_go_fast_walk"), speed.move_types.WALK, true)
+	speed.add_speed("gotta_go_fast_extended", get_mcm_config("gotta_go_fast_crouch"), speed.move_types.CROUCH, true)
+	speed.add_speed("gotta_go_fast_extended", get_mcm_config("gotta_go_fast_prone"), speed.move_types.PRONE, true)
+	speed.add_speed("gotta_go_fast_extended", get_mcm_config("gotta_go_fast_climb"), speed.move_types.CLIMB, true)
+	speed.add_speed("gotta_go_fast_extended", get_mcm_config("gotta_go_fast_lean"), speed.move_types.LEAN, true)
+	speed.add_speed("gotta_go_fast_extended", get_mcm_config("gotta_go_fast_scoped"), speed.move_types.SCOPED, true)
 end
 
 function on_game_start()
-	RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
-	RegisterScriptCallback("actor_on_update", actor_on_update)
 	RegisterScriptCallback("on_option_change", on_option_change)
+	on_option_change()
 end
