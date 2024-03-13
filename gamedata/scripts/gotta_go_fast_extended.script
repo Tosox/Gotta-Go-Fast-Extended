@@ -20,7 +20,11 @@ function on_option_change()
 	speed.add_speed("gotta_go_fast_extended", get_mcm_config("gotta_go_fast_scoped"), speed.move_types.SCOPED, true)
 end
 
+function actor_on_first_update()
+	on_option_change()
+end
+
 function on_game_start()
 	RegisterScriptCallback("on_option_change", on_option_change)
-	on_option_change()
+	RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
 end
