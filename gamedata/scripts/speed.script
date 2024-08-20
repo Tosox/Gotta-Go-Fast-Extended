@@ -94,6 +94,10 @@ end
 -- force - Boolean, will overwrite existing speed.
 -- Returns true if speed added successfully, otherwise false
 function add_speed(speed_key, speed_mult, move_type, force)
+    if not db.actor then
+        return false
+    end
+
     if type(move_type) == "boolean" then
         -- Backwards compatability
         if move_type then
@@ -188,4 +192,23 @@ end
 
 function on_game_start()
     RegisterScriptCallback("actor_on_update", actor_on_update)
+
+    if true then
+        table.insert(xrs_debug_tools.toggle_hud_list["left"], 1, "ggfe_hud")
+    
+        xrs_debug_tools.ggfe_hud_show = function(hud)
+            hud:add_msg("run", string.format("%s | %s", db.actor:get_actor_run_coef(), get_multiplier_product(speeds.run.multiplier)))
+            hud:add_msg("runback", string.format("%s | %s", db.actor:get_actor_runback_coef(), get_multiplier_product(speeds.run.multiplier)))
+            hud:add_msg("sprint", string.format("%s | %s", db.actor:get_actor_sprint_koef(), get_multiplier_product(speeds.sprint.multiplier)))
+            hud:add_msg("crouch", string.format("%s | %s", db.actor:get_actor_crouch_coef(), get_multiplier_product(speeds.crouch.multiplier)))
+            hud:add_msg("climb", string.format("%s | %s", db.actor:get_actor_climb_coef(), get_multiplier_product(speeds.climb.multiplier)))
+            hud:add_msg("-----------------------------------")
+            hud:add_msg("is walking", string.format("%s | %s", is_actor_walking(level.actor_moving_state()), get_multiplier_product(speeds.walk.multiplier)))
+            hud:add_msg("is proning", string.format("%s | %s", is_actor_proning(level.actor_moving_state()), get_multiplier_product(speeds.prone.multiplier)))
+            hud:add_msg("is leaning", string.format("%s | %s", is_actor_leaning(level.actor_moving_state()), get_multiplier_product(speeds.lean.multiplier)))
+    
+            hud:set_header("-[GGFE Debug]-")
+            hud:display()
+        end
+    end
 end
