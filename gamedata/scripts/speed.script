@@ -50,8 +50,12 @@ local dbg_printf = function(...)
 	if _dbg then printf(...) end
 end
 
-function initialize_base_speed_coefs() 
-    original_walk_accel = db.actor:get_actor_walk_accel()
+function initialize_base_speed_coefs()
+    if db.actor.get_actor_walk_accel then
+        original_walk_accel = db.actor:get_actor_walk_accel()
+    else
+        original_walk_accel = 11.5 -- Default value from actor->walk_accel
+    end
 
     speeds.run.def = db.actor:get_actor_run_coef()
     speeds.sprint.def = db.actor:get_actor_sprint_koef()
@@ -202,7 +206,11 @@ function get_actor_speed()
 end
 
 function on_game_start()
-    RegisterScriptCallback("actor_on_update", actor_on_update)
+    if db.actor.get_actor_walk_accel then
+        RegisterScriptCallback("actor_on_update", actor_on_update)
+    else
+        printe("[speed] You should install the Modded Exes to use full functionality of the speed script")
+    end
 
     --[[
     if true then
