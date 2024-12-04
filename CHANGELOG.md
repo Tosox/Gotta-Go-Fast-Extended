@@ -18,4 +18,8 @@
 * Added customizable walking while leaning speed
 
 ### v1.3.1:
-* Removed leftover debug code snippets 
+* Removed leftover debug code snippets
+
+### v2.0.0:
+* Added speed.script support
+* Updated localizations

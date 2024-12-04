@@ -55,10 +55,10 @@
 		<text>Multiplies actor walking speed while leaning (when you move with the "Walk + Lean left/right" key pressed) by the defined factor.</text>
 	</string>
 	<string id="ui_mcm_gggf_gotta_go_fast_scoped">
-		<text>ADS speed multiplier</text>
+		<text>Walking while aiming speed multiplier</text>
 	</string>
 	<string id="ui_mcm_gggf_gotta_go_fast_scoped_desc">
-		<text>Multiplies actor moving speed when ADS (when you move with the "Aim" key pressed) by the defined factor.</text>
+		<text>Multiplies actor walking speed while aiming (when you move with the "Aim" key pressed) by the defined factor.</text>
 	</string>
 
 </string_table>

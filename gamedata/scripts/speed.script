@@ -1,0 +1,237 @@
+local original_walk_accel = nil
+local speeds = {
+    walk = {
+        def = 1,
+        multiplier = {},
+    },
+    run = {
+        def = 1,
+        multiplier = {},
+    },
+    sprint = {
+        def = 1,
+        multiplier = {},
+    },
+    crouch = {
+        def = 1,
+        multiplier = {},
+    },
+    prone = {
+        def = 1,
+        multiplier = {},
+    },
+    climb = {
+        def = 1,
+        multiplier = {},
+    },
+    lean = {
+        def = 1,
+        multiplier = {},
+    },
+    scoped = {
+        def = 1,
+        multiplier = {},
+    },
+}
+
+move_types = {
+    WALK = "walk",
+    RUN = "run",
+    SPRINT = "sprint",
+    CROUCH = "crouch",
+    PRONE = "prone",
+    CLIMB = "climb",
+    LEAN = "lean",
+    SCOPED = "scoped",
+}
+
+local _dbg = false
+local dbg_printf = function(...)
+	if _dbg then printf(...) end
+end
+
+function initialize_base_speed_coefs()
+    if db.actor.get_actor_walk_accel then
+        original_walk_accel = db.actor:get_actor_walk_accel()
+    else
+        original_walk_accel = 11.5 -- Default value from actor->walk_accel
+    end
+
+    speeds.run.def = db.actor:get_actor_run_coef()
+    speeds.sprint.def = db.actor:get_actor_sprint_koef()
+end
+
+function get_multiplier_product(tbl)
+    local coef = 1
+    for _, val in pairs(tbl) do
+        coef = coef * val
+    end
+    return coef
+end
+
+function update_speeds()
+    if not original_walk_accel then
+        initialize_base_speed_coefs()
+        dbg_printf("[speed] Initialized base speed coefficients")
+    end
+
+    local run_coef = get_multiplier_product(speeds.run.multiplier)
+    local sprint_coef = get_multiplier_product(speeds.sprint.multiplier)
+
+    db.actor:set_actor_run_coef(clamp(speeds.run.def * run_coef, 0, 10))
+    db.actor:set_actor_runback_coef(clamp(speeds.run.def * run_coef, 0, 10))
+    db.actor:set_actor_sprint_koef(clamp(speeds.sprint.def * sprint_coef, 0, 10))
+end
+
+-- Usage: Add a speed modifier.
+-- Once a speed modifier is added, speed will be recalculated and set.
+-- Params:
+-- speed_key - Name of speed multiplier you want to add
+-- speed_mult - Speed multiplier as a number (e.g. 0.5 will halve speed)
+-- move_type - String, use move_types array to define which move type speed to adjust
+-- force - Boolean, will overwrite existing speed.
+-- Returns true if speed added successfully, otherwise false
+function add_speed(speed_key, speed_mult, move_type, force)
+    if not db.actor then
+        return false
+    end
+
+    if type(move_type) == "boolean" then
+        -- Backwards compatability
+        if move_type then
+            move_type = move_types.SPRINT
+        else
+            move_type = move_types.RUN
+        end
+    end
+
+    if (not speeds[move_type]) or (not speeds[move_type].multiplier) then
+        return false
+    end
+
+    if (speeds[move_type].multiplier[speed_key]) and (not force) then
+        return false
+    end
+
+    speeds[move_type].multiplier[speed_key] = speed_mult
+    update_speeds()
+
+    return true
+end
+
+-- Usage: Drop a speed modifier. Once a speed modifier is dropped, speed will be recalculated and set. 
+-- Params
+-- speed_key - Name of speed multiplier to drop. Will drop from all tables.
+function remove_speed(speed_key)
+    for typ, speed in pairs(speeds) do
+        if (speed.multiplier) and (speed.multiplier[speed_key]) then
+            dbg_printf("[speed] Removed speed multiplier '%s' for type '%s' with value '%s'", speed_key, typ, speed.multiplier[speed_key])
+            speed.multiplier[speed_key] = nil
+        end
+    end
+    update_speeds()
+end
+
+
+function is_actor_walking(state)
+	return (state >= 33) and (state <= 42)
+end
+
+function is_actor_proning(state)
+	return (state >= 49) and (state <= 58)
+end
+
+function is_actor_leaning(state)
+    -- Leaning right or leaning left
+	return ((state >= 16385) and (state <= 16394)) or ((state >= 8193) and (state <= 8202))
+end
+
+function is_actor_crouching(state)
+	return (state >= 17) and (state <= 26)
+end
+
+function is_actor_climbing(state)
+	return (state >= 2049) and (state <= 2058)
+end
+
+function is_actor_scoped()
+	return axr_main.weapon_is_zoomed
+end
+
+local prev_moving_state = nil
+local prev_scoped_state = nil
+function actor_on_update()
+    if not original_walk_accel then
+        initialize_base_speed_coefs()
+        dbg_printf("[speed] Initialized base speed coefficients")
+    end
+
+    local moving_state = level.actor_moving_state()
+	local is_scoped = is_actor_scoped()
+	
+	-- Check if movement state or scoped state changed
+	if (prev_moving_state == moving_state) and (prev_scoped_state == is_scoped) then
+		return
+	end
+
+	prev_moving_state = moving_state
+	prev_scoped_state = is_scoped
+
+    local walk_accel_factor = 1
+	
+	-- Change speed base factor
+	if is_actor_walking(moving_state) then
+		walk_accel_factor = get_multiplier_product(speeds.walk.multiplier)
+	elseif is_actor_proning(moving_state) then
+		walk_accel_factor = get_multiplier_product(speeds.prone.multiplier)
+	elseif is_actor_leaning(moving_state) then
+		walk_accel_factor = get_multiplier_product(speeds.lean.multiplier)
+    elseif is_actor_crouching(moving_state) then
+        walk_accel_factor = get_multiplier_product(speeds.crouch.multiplier)
+    elseif is_actor_climbing(moving_state) then
+        walk_accel_factor = get_multiplier_product(speeds.climb.multiplier)
+	end
+
+	-- TODO: maybe change this logic. Is inconsistent in difference to walking, crouching and proning
+	if is_actor_scoped() then
+		walk_accel_factor = walk_accel_factor * get_multiplier_product(speeds.scoped.multiplier)
+	end
+	
+	db.actor:set_actor_walk_accel(original_walk_accel * walk_accel_factor)
+end
+
+function get_actor_speed()
+    local vec = db.actor:get_movement_speed()
+    return math.sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z)
+end
+
+function on_game_start()
+    if db.actor.get_actor_walk_accel then
+        RegisterScriptCallback("actor_on_update", actor_on_update)
+    else
+        printe("[speed] You should install the Modded Exes to use full functionality of the speed script")
+    end
+
+    --[[
+    if true then
+        table.insert(xrs_debug_tools.toggle_hud_list["left"], 1, "ggfe_hud")
+    
+        xrs_debug_tools.ggfe_hud_show = function(hud)
+            hud:add_msg("SPEED", string.format("%s", get_actor_speed()))
+            hud:add_msg("-----------------------------------")
+            hud:add_msg("run", string.format("%s | %s", db.actor:get_actor_run_coef(), get_multiplier_product(speeds.run.multiplier)))
+            hud:add_msg("runback", string.format("%s | %s", db.actor:get_actor_runback_coef(), get_multiplier_product(speeds.run.multiplier)))
+            hud:add_msg("sprint", string.format("%s | %s", db.actor:get_actor_sprint_koef(), get_multiplier_product(speeds.sprint.multiplier)))
+            hud:add_msg("crouch", string.format("%s | %s", db.actor:get_actor_crouch_coef(), get_multiplier_product(speeds.crouch.multiplier)))
+            hud:add_msg("climb", string.format("%s | %s", db.actor:get_actor_climb_coef(), get_multiplier_product(speeds.climb.multiplier)))
+            hud:add_msg("-----------------------------------")
+            hud:add_msg("is walking", string.format("%s | %s", is_actor_walking(level.actor_moving_state()), get_multiplier_product(speeds.walk.multiplier)))
+            hud:add_msg("is proning", string.format("%s | %s", is_actor_proning(level.actor_moving_state()), get_multiplier_product(speeds.prone.multiplier)))
+            hud:add_msg("is leaning", string.format("%s | %s", is_actor_leaning(level.actor_moving_state()), get_multiplier_product(speeds.lean.multiplier)))
+    
+            hud:set_header("-[GGFE Debug]-")
+            hud:display()
+        end
+    end
+    ]]
+end
