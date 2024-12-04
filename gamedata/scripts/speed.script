@@ -50,16 +50,14 @@ local dbg_printf = function(...)
 	if _dbg then printf(...) end
 end
 
-local function initialize_base_speed_coefs() 
+function initialize_base_speed_coefs() 
     original_walk_accel = db.actor:get_actor_walk_accel()
 
     speeds.run.def = db.actor:get_actor_run_coef()
     speeds.sprint.def = db.actor:get_actor_sprint_koef()
-    speeds.crouch.def = db.actor:get_actor_crouch_coef()
-    speeds.climb.def = db.actor:get_actor_climb_coef()
 end
 
-local function get_multiplier_product(tbl)
+function get_multiplier_product(tbl)
     local coef = 1
     for _, val in pairs(tbl) do
         coef = coef * val
@@ -67,7 +65,7 @@ local function get_multiplier_product(tbl)
     return coef
 end
 
-local function update_speeds()
+function update_speeds()
     if not original_walk_accel then
         initialize_base_speed_coefs()
         dbg_printf("[speed] Initialized base speed coefficients")
@@ -75,14 +73,10 @@ local function update_speeds()
 
     local run_coef = get_multiplier_product(speeds.run.multiplier)
     local sprint_coef = get_multiplier_product(speeds.sprint.multiplier)
-    local crouch_coef = get_multiplier_product(speeds.crouch.multiplier)
-    local climb_coef = get_multiplier_product(speeds.climb.multiplier)
 
-    db.actor:set_actor_run_coef(clamp(speeds.run.def * run_coef, 1, 10))
-    db.actor:set_actor_runback_coef(clamp(speeds.run.def * run_coef, 1, 10))
-    db.actor:set_actor_sprint_koef(clamp(speeds.sprint.def * sprint_coef, 1, 10))
-    db.actor:set_actor_crouch_coef(clamp(speeds.crouch.def * crouch_coef, 1, 10))
-    db.actor:set_actor_climb_coef(clamp(speeds.climb.def * climb_coef, 1, 10))
+    db.actor:set_actor_run_coef(clamp(speeds.run.def * run_coef, 0, 10))
+    db.actor:set_actor_runback_coef(clamp(speeds.run.def * run_coef, 0, 10))
+    db.actor:set_actor_sprint_koef(clamp(speeds.sprint.def * sprint_coef, 0, 10))
 end
 
 -- Usage: Add a speed modifier.
@@ -148,13 +142,21 @@ function is_actor_leaning(state)
 	return ((state >= 16385) and (state <= 16394)) or ((state >= 8193) and (state <= 8202))
 end
 
+function is_actor_crouching(state)
+	return (state >= 17) and (state <= 26)
+end
+
+function is_actor_climbing(state)
+	return (state >= 2049) and (state <= 2058)
+end
+
 function is_actor_scoped()
 	return axr_main.weapon_is_zoomed
 end
 
 local prev_moving_state = nil
 local prev_scoped_state = nil
-local function actor_on_update()
+function actor_on_update()
     if not original_walk_accel then
         initialize_base_speed_coefs()
         dbg_printf("[speed] Initialized base speed coefficients")
@@ -180,6 +182,10 @@ local function actor_on_update()
 		walk_accel_factor = get_multiplier_product(speeds.prone.multiplier)
 	elseif is_actor_leaning(moving_state) then
 		walk_accel_factor = get_multiplier_product(speeds.lean.multiplier)
+    elseif is_actor_crouching(moving_state) then
+        walk_accel_factor = get_multiplier_product(speeds.crouch.multiplier)
+    elseif is_actor_climbing(moving_state) then
+        walk_accel_factor = get_multiplier_product(speeds.climb.multiplier)
 	end
 
 	-- TODO: maybe change this logic. Is inconsistent in difference to walking, crouching and proning
@@ -190,13 +196,21 @@ local function actor_on_update()
 	db.actor:set_actor_walk_accel(original_walk_accel * walk_accel_factor)
 end
 
+function get_actor_speed()
+    local vec = db.actor:get_movement_speed()
+    return math.sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z)
+end
+
 function on_game_start()
     RegisterScriptCallback("actor_on_update", actor_on_update)
 
+    --[[
     if true then
         table.insert(xrs_debug_tools.toggle_hud_list["left"], 1, "ggfe_hud")
     
         xrs_debug_tools.ggfe_hud_show = function(hud)
+            hud:add_msg("SPEED", string.format("%s", get_actor_speed()))
+            hud:add_msg("-----------------------------------")
             hud:add_msg("run", string.format("%s | %s", db.actor:get_actor_run_coef(), get_multiplier_product(speeds.run.multiplier)))
             hud:add_msg("runback", string.format("%s | %s", db.actor:get_actor_runback_coef(), get_multiplier_product(speeds.run.multiplier)))
             hud:add_msg("sprint", string.format("%s | %s", db.actor:get_actor_sprint_koef(), get_multiplier_product(speeds.sprint.multiplier)))
@@ -211,4 +225,5 @@ function on_game_start()
             hud:display()
         end
     end
+    ]]
 end
