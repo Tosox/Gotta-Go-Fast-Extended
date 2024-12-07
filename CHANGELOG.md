@@ -23,3 +23,6 @@
 ### v2.0.0:
 * Added speed.script support
 * Updated localizations
+
+## v2.0.1:
+* Fixed speed.script:209: attempt to index field 'actor' (a nil value)
