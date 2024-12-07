@@ -54,6 +54,8 @@ function initialize_base_speed_coefs()
     if db.actor.get_actor_walk_accel then
         original_walk_accel = db.actor:get_actor_walk_accel()
     else
+        UnregisterScriptCallback("actor_on_update", actor_on_update)
+        printe("[speed] You should install the Modded Exes to use full functionality of the speed script")
         original_walk_accel = 11.5 -- Default value from actor->walk_accel
     end
 
@@ -206,11 +208,7 @@ function get_actor_speed()
 end
 
 function on_game_start()
-    if db.actor.get_actor_walk_accel then
-        RegisterScriptCallback("actor_on_update", actor_on_update)
-    else
-        printe("[speed] You should install the Modded Exes to use full functionality of the speed script")
-    end
+    RegisterScriptCallback("actor_on_update", actor_on_update)
 
     --[[
     if true then
